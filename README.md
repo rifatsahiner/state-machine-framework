@@ -1,4 +1,4 @@
-# state-machine-freamwork
+# state-machine-framework
 A full-fledged UML state-machine framework with support for hierarchical (nested) states
 
 Divide and conqure with encapsulated tasks that are constructed as hierarchical state machines
