@@ -1,5 +1,5 @@
 
-#include "ulak.h"
+#include "uOS.h"
 #include <iostream>
 #include <chrono>
 #include <iterator>
@@ -7,7 +7,7 @@
 
 using namespace std::chrono_literals;
 
-#define ASSERT_ON_EXTRA_COPY(event_ptr, target_use_count)\
+#define ASSERT_ON_EXTRA_COPY(event_ptr, target_use_count) \
 assert(event_ptr.use_count() == target_use_count)
 
 
@@ -23,7 +23,7 @@ void FW::init(void){
 }
 
 int32_t FW::run() {
-    // onStartup() aşağıdaki satırşar
+    // onStartup() aşağıdaki satırlar
     // struct termios tio;                        // modified terminal attributes
     // tcgetattr(0, &l_tsav);             // save the current terminal attributes
     // tcgetattr(0, &tio);              // obtain the current terminal attributes
@@ -365,9 +365,9 @@ void FW::_handleTick(void)  // todo: inline yap
                     _publishEvent(eventCopy);
                 }
             } else {
-                if(timerNode.isPeriodic == false)
+                if(timerNode.isPeriodic == false){
                     _taskMap.find(timerNode.receiverTaskId)->second->putEvent(std::move(timerNode.eventPtr));
-                else {
+                }else {
                     std::shared_ptr<const Event> eventCopy = timerNode.eventPtr;
                     _taskMap.find(timerNode.receiverTaskId)->second->putEvent(std::move(eventCopy));
                 }

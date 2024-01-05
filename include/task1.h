@@ -1,18 +1,30 @@
 #ifndef TASK1_H
 #define TASK1_H
 
-#include "ulak.h"
+#include "uOS.h"
+
+
+namespace App1 {
+
 
 class Task1 : public uOS::Task {
     public:
         Task1() = delete;
-        Task1(const uOS::TaskId, const std::string&);   
+        Task1(const uOS::TaskId, const std::string&, const int& i, const float& f, const std::string& s);   
     
-    private:
-        void _stateMachine(std::shared_ptr<const uOS::Event>&) override;
-        void _init(void) override;
+    protected:
+        uOS::HandleResult _topInitialTrans(void) override;
+        uOS::HandleResult state1(const std::shared_ptr<const uOS::Event>&);
+        uOS::HandleResult state2(const std::shared_ptr<const uOS::Event>&);
 
-        uint32_t _count {0};
+    private:
+        int _i;
+        float _f;
+        std::string _s;
 };
+
+
+}   // namespace App1
+
 
 #endif

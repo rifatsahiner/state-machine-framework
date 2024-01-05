@@ -1,5 +1,5 @@
 
-#include "ulak.h"
+#include "uOS.h"
 #include <iostream>
 
 namespace uOS {
@@ -15,7 +15,7 @@ void Task::start(void)
     std::queue<std::shared_ptr<const Event>> empty;
     std::swap(_eventQueue, empty);
 
-    _init();
+    init();
 
     resume();
 }
@@ -90,7 +90,7 @@ void Task::_taskLoop(void)
         
         if(currentEvent != nullptr) {
             std::cout << "_taskLoop - event copy count = " << currentEvent.use_count() << std::endl;
-            _stateMachine(currentEvent);
+            dispatch(currentEvent);
         } else {
             std::cout << "taskId: " << unsigned(_taskId) << " queue is empty, will sleep" << std::endl;
             currentEvent.reset();

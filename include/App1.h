@@ -1,21 +1,18 @@
 #ifndef DENEME1_H
 #define DENEME1_H
 
-#include "ulak.h"
+#include "uOS.h"
 
-// enum class Deneme1Tasks : uOS::TaskId {
-//     TASK_1,
-//     TASK_2,
-//     TASK_LIST_COUNT
-// };
-namespace AppDeneme1 {
+//extern uOS::TaskId g_task1Id, g_task2Id, g_task3Id;
+
+
+namespace App1 {
 
 
 // external (inter-task) signals
 enum AppSignals : uOS::SignalId {
-    SIGNAL_1 = uOS::EXT_SIGNAL_START,
-    SIGNAL_2,
-    SIGNAL_3,
+    TRANS_TO_1 = uOS::EXT_SIGNAL_START,
+    TRANS_TO_2,
     SIGNAL_LIST_COUNT
 };
 
@@ -27,6 +24,7 @@ struct Event1 : uOS::Event {
 };
 
 
-}   // namespace AppDeneme1
+}   // namespace App1
+
 
 #endif

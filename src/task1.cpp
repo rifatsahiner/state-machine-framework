@@ -1,65 +1,81 @@
 
-#include "deneme1.h"
+#include "App1.h"
 #include "task1.h"
 #include <iostream>
 
-//extern uOS::TaskId g_task2Id;
+
+namespace App1 {
+
 
 // internal signals
-enum Task1signals : uOS::SignalId {
-    PUBLISH,
-    SIGNAL_LIST_COUNT
-};
+// enum Task1signals : uOS::SignalId {
+//     PUBLISH,
+//     SIGNAL_LIST_COUNT
+// };
 
-Task1::Task1(const uOS::TaskId taskId, const std::string& taskName) : Task (taskId, taskName) { }
+Task1::Task1(const uOS::TaskId taskId, const std::string& taskName, const int& i, const float& f, const std::string& s) : Task (taskId, taskName), _i{i}, _f{f}, _s{s} {}
 
-void Task1::_stateMachine(std::shared_ptr<const uOS::Event>& receivedEventBase) 
+uOS::HandleResult Task1::_topInitialTrans(void)
 {
-    std::cout << "_stateMachine before_cast - event copy count = " << receivedEventBase.use_count() << std::endl;
-
-    // switch(receivedEventBase->signal) 
-    // {
-    //     case Task1signals::PUBLISH:
-    //     {
-    //         auto event = uOS::new_e<AppDeneme1::Event1>(AppDeneme1::AppSignals::SIGNAL_1);
-    //         event->s = "this is event from task 1\n";
-    //         uOS::FW::publishEvent(event);
-    //     }
-    //     break;
-        
-    //     case AppDeneme1::AppSignals::SIGNAL_2:
-    //     case AppDeneme1::AppSignals::SIGNAL_3:
-    //         auto event1 = uOS::recast_e<AppDeneme1::Event1>(receivedEventBase);
-    //         std::cout << event1->s << std::endl;
-    //     break;
-
-    // }
-
-    if(receivedEventBase->signal == AppDeneme1::AppSignals::SIGNAL_1){
-        std::cout << "this is task1 - event: " << ++_count << std::endl;
-        
-        auto event1 = uOS::recast_e<AppDeneme1::Event1>(receivedEventBase);
-        std::cout << "_stateMachine after_cast - event copy count = " << receivedEventBase.use_count() << std::endl;
-        std::cout << event1->s << std::endl;
-
-        if(_count == 5){
-            unsubscribe(AppDeneme1::AppSignals::SIGNAL_1);
-            std::cout << "task1 - unsubscribed " << std::endl;
-        }
-
-        // auto event1 = uOS::recast_e<AppDeneme1::Event1>(receivedEventBase);
-        // std::cout << "_stateMachine after_cast - event copy count = " << receivedEventBase.use_count() << std::endl;
-        // std::cout << event1->s << std::endl;
-    }
-}
-
-void Task1::_init(void)
-{
-    // subscribe(AppDeneme1::AppSignals::SIGNAL_2);
-    // subscribe(AppDeneme1::AppSignals::SIGNAL_3);
+    // subscribe(App1::AppSignals::SIGNAL_2);
+    // subscribe(App1::AppSignals::SIGNAL_3);
 
     // auto event = uOS::new_e<uOS::Event>(Task1signals::PUBLISH);
     // uOS::FW::postEventIn(11000, _taskId, event);
 
-    subscribe(AppDeneme1::AppSignals::SIGNAL_1);
+    //subscribe(App1::AppSignals::SIGNAL_1);
+    
+    std::cout << "int: " << _i << "float: " << _f << "string " << _s << std::endl;
+
+    //uOS::StateMachine::State deneme = static_cast<uOS::StateMachine::State>(&Task1::state1);
+
+    //return retTrans(static_cast<uOS::StateMachine::State>(&Task1::state1));
+    //return retSuper(static_cast<uOS::StateMachine::State>(&Task1::state1));
+    //return retTrans(&Task1::state1);
+    return trans(&Task1::state1);
 }
+
+uOS::HandleResult Task1::state1(const std::shared_ptr<const uOS::Event>& event) {
+    std::cout << "Task1 - STATE1 function entry. signal: " << (unsigned)event->signal << std::endl;
+
+    uOS::HandleResult status;
+    switch (event->signal) {
+        case AppSignals::TRANS_TO_2: {
+            _i = 222;
+            std::cout << "i: " << _i << std::endl;
+            std::cout << "Task1 - STATE1 function - transition to -> STATE-2" << std::endl;
+            status = trans(&Task1::state2);
+            break;
+        }
+
+        default: {
+            status = super(&Task1::top);
+            break;
+        }
+    }
+    return status;
+}
+        
+uOS::HandleResult Task1::state2(const std::shared_ptr<const uOS::Event>& event){
+    std::cout << "Task1 - STATE2 function entry. signal: " << (unsigned)event->signal << std::endl;
+    
+    uOS::HandleResult status;
+    switch (event->signal) {
+        case AppSignals::TRANS_TO_1: {
+            _i = 111;
+            std::cout << "i: " << _i << std::endl;
+            std::cout << "Task1 - STATE2 function - transition to -> STATE-1" << std::endl;
+            status = trans(&Task1::state1);
+            break;
+        }
+
+        default: {
+            status = super(&Task1::top);
+            break;
+        }
+    }
+    return status;
+}
+
+
+}   // namespace App1

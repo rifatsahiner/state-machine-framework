@@ -1,0 +1,1 @@
+subs olmayan bir event'e için publish çağırıldığında segfault oluyor
