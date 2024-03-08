@@ -6,6 +6,7 @@
 
 #include <utility>
 #include <functional>
+#include <optional>
 
 #include <array>
 #include <vector>
@@ -26,6 +27,10 @@ using TimerId = uint_fast32_t;
 using TimerId = uint_fast16_t;
 #endif
 
+/// Offsets for user signals
+constexpr SignalId INT_SIGNAL_START = static_cast<SignalId>(4);
+constexpr SignalId EXT_SIGNAL_START = static_cast<SignalId>(32);
+
 //////////////////////////////////////////////////////
 //                                                  //
 //////////////////////////////////////////////////////
@@ -41,20 +46,15 @@ struct TimerNode {
     // TimerNode(TimerNode&& other) = default;
 };
 
-// Event* new_e(SignalId signalId)      // sanırım aynı parametre olduğu için deduct edemiyor
-// {    
-//     Event* newEventPtr = new Event; 
-//     newEventPtr->signal = signalId;
-//     return newEventPtr;
-// }
-
-template <class T>
-T* new_e(SignalId signalId)
+template <class T = Event>
+T* new_e(std::optional<SignalId> signalId = std::nullopt)
 {
     static_assert(std::is_base_of_v<Event, T>);
     
     T* newEventPtr = new T; 
-    newEventPtr->signal = signalId;
+    if(signalId){
+        newEventPtr->signal = signalId.value();
+    }
     return newEventPtr;
 }
 
@@ -77,7 +77,7 @@ class FW
         static void stop(void);
 
         static void startTask(TaskId);
-        static bool stopTask(TaskId);
+        static void stopTask(TaskId);
         static bool resumeTask(TaskId);
         static bool deleteTask(TaskId);
 

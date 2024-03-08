@@ -38,38 +38,6 @@ void StateMachine::init(void)
 
     // process initial transition
     _currentState = _procInitTrans();
-
-    // // set first top state as the current state (abs-top)
-    // State currentTopState = _currentState;   
-
-    // do {
-    //     std::vector<State> path {_tempTargetState};
-
-    //     // get target's super
-    //     _tempTargetState(EMPTY_EVENT_PTR);
-
-    //     // go up until reaching current top
-    //     while(_tempTargetState != currentTopState) {
-    //         // save new state to path and get super of that state
-    //         path.push_back(_tempTargetState);
-    //         _tempTargetState(EMPTY_EVENT_PTR);
-    //     }
-
-    //     // restore target state
-    //     _tempTargetState = path[0];     // ????? neden yapıyoruz bunu ?????
-
-    //     // enter states top down
-    //     std::for_each(path.crbegin(), path.crend(), [](const State& state){ state(ENTRY_EVENT_PTR); });
-
-    //     // set new top state as the target
-    //     currentTopState = path[0];
-
-    //     // continue to iterate until reaching a leaf state that ignores init signal
-    // } while (currentTopState(INIT_EVENT_PTR) == HandleResult::Trans);
-
-    // // set current state as the leaf state
-    // _currentState = currentTopState;
-    // _tempTargetState = currentTopState;
 }
 
 void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
@@ -116,7 +84,7 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
             // exit source and enter the target
             (this->*sourceState)(EXIT_EVENT_PTR);
             entryPath.push_back(targetState);
-            std::cout << "Transition A happened" << std::endl;
+            std::cout << "\nTransition A happened\n" << std::endl;
         } else 
         {
             // --- (b) source is the superstate of target (b) ---
@@ -125,7 +93,7 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
             if(sourceState == _tempTargetState){
                 // just enter the target
                 entryPath.push_back(targetState);
-                std::cout << "Transition B happened" << std::endl;
+                std::cout << "\nTransition B happened\n" << std::endl;
             } else 
             {
                 // --- (c) source and target are at the same level (c) ---
@@ -136,7 +104,7 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
                     // exit source and enter the target
                     (this->*sourceState)(EXIT_EVENT_PTR);
                     entryPath.push_back(targetState);
-                    std::cout << "Transition C happened" << std::endl;
+                    std::cout << "\nTransition C happened\n" << std::endl;
                 } else 
                 {
                     // --- (d) target is the superstate of source (d) ---
@@ -144,7 +112,7 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
                     if(_tempTargetState == targetState){
                         // just exit the source
                         (this->*sourceState)(EXIT_EVENT_PTR);
-                        std::cout << "Transition D happened" << std::endl;
+                        std::cout << "\nTransition D happened\n" << std::endl;
                     } else {
                         bool isLcaFound = false;
                         
@@ -161,7 +129,7 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
                             {
                                 // LCA is the source (means case is "e")
                                 isLcaFound = true;
-                                std::cout << "Transition E happened" << std::endl;
+                                std::cout << "\nTransition E happened\n" << std::endl;
                                 break;
                             } else
                             {
@@ -184,7 +152,7 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
                                 // --- (f) LCA is source's super (f) ---
                                 // remove source's super and higher states from path
                                 entryPath.erase(lcaIter, entryPath.end());
-                                std::cout << "Transition F happened" << std::endl;
+                                std::cout << "\nTransition F happened\n" << std::endl;
                             } else
                             {
                                 // --- (g)(h) LCA is multiple levels higher than source (g)(h) ---
@@ -192,7 +160,7 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
                                 do {
                                     // exit source's current superstate an climb one superstate higher
                                     if((this->*tempStateHolder)(EXIT_EVENT_PTR) == HandleResult::Handled) {
-                                        (this->*tempStateHolder)(ENTRY_EVENT_PTR);
+                                        (this->*tempStateHolder)(EMPTY_EVENT_PTR);
                                     }
                                     tempStateHolder = _tempTargetState;
 
@@ -202,7 +170,7 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
 
                                 // remove LCA and higher states from path
                                 entryPath.erase(lcaIter, entryPath.end());
-                                std::cout << "Transition G/H happened" << std::endl;
+                                std::cout << "\nTransition G/H happened\n" << std::endl;
                             }
                         }
                     }
@@ -221,6 +189,9 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
             _tempTargetState = _currentState;
         }
     }
+
+    // restore temp state if no trasition taken
+    _tempTargetState = _currentState;
 }
 
 bool StateMachine::isIn(const State state)
@@ -231,7 +202,7 @@ bool StateMachine::isIn(const State state)
     bool isIn = false;
 
     do {
-        if(_tempTargetState == state){
+        if(_tempTargetState == state) {
             // state is matched, set result and break loop
             isIn = true;
             break;
@@ -243,16 +214,6 @@ bool StateMachine::isIn(const State state)
     // restore temp state and return result
     _tempTargetState = _currentState;
     return isIn;
-}
-
-HandleResult StateMachine::retTrans(const State target) {
-    _tempTargetState = target;
-    return HandleResult::Trans;
-}
-
-HandleResult StateMachine::retSuper(const State superstate) {
-    _tempTargetState = superstate;
-    return HandleResult::Super;
 }
 
 //

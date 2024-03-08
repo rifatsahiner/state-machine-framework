@@ -2,6 +2,7 @@
 #include "uOS.h"
 #include <iostream>
 
+
 namespace uOS {
 
 
@@ -69,6 +70,8 @@ void Task::subscribe(SignalId signalId) { FW::subscribe(signalId, _taskId); }
 void Task::unsubscribe(SignalId signalId) { FW::unsubscribe(signalId, _taskId); }
 
 // todo: bunu _putEvent yapabilir miyiz?
+// bu değişecek const Event* alacak, içeride FW::post çağıracak
+// yada postSelf olabilir
 void Task::putEvent(std::shared_ptr<const Event>& event) { putEvent(std::move(event)); }
 
 //////////////////////////////////////////////////////

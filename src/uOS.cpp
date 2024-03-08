@@ -36,17 +36,17 @@ int32_t FW::run() {
     // sparam.sched_priority = sched_get_priority_max(SCHED_FIFO);
     // pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam) == 0;  
 
-    uint_fast8_t i {0};
+    // uint_fast8_t i {0};
     std::cout << "uOS run..." << std::endl;
 
     while(_isRunning){
         // now süresini al
         auto now =  std::chrono::high_resolution_clock::now();
 
-        if(++i == 100){
-            std::cout << "tick..." << std::endl;
-            i = 0;
-        }
+        // if(++i == 100){
+        //     std::cout << "tick..." << std::endl;
+        //     i = 0;
+        // }
 
         _handleTick();
 
@@ -56,12 +56,18 @@ int32_t FW::run() {
 
     // onCleanup aşağıdaki satırlar
     // printf("\nBye! Bye!\n");
+    std::cout << "uOS Bye!" << std::endl;
     // tcsetattr(0, TCSANOW, &l_tsav);   // restore the saved terminal attributes
 
     // hangi mutex bu, neden destroy ediliyor ???
     // pthread_mutex_destroy(&QF_pThreadMutex_);
     
+    stopTask(_taskMap.begin()->first);
     return 0;
+}
+
+void FW::stop(void){
+    _isRunning = false;
 }
 
 void FW::startTask(TaskId taskId){
@@ -69,6 +75,13 @@ void FW::startTask(TaskId taskId){
     assert(taskIter != _taskMap.cend());
 
     taskIter->second->start();
+}
+
+void FW::stopTask(TaskId taskId){
+    auto taskIter = _taskMap.find(taskId);
+    assert(taskIter != _taskMap.cend());
+
+    taskIter->second->stop();
 }
 
 void FW::postEvent(TaskId taskId, const Event* event){
@@ -104,6 +117,7 @@ void FW::publishEvent(const Event* event)
     // get signal's subs list, assert if signal id does not have subs list 
     auto subListIter = _subsMap.find(event->signal);
     //assert(subListIter != _subsMap.cend()); -> publish eden bunu bilmeyebilir
+    // todo: sinyalin subs ları yoksa return edilmesi gerekiyor
 
     std::shared_ptr<const Event> eventSp(event);
     event = nullptr;
@@ -122,8 +136,6 @@ TimerId FW::publishEventEvery(uint_fast16_t intervalMs, const Event* event)
 }
 
 void FW::cancelTimedEvent(TimerId timerId){
-    // todo: assert for invalid timerid
-
     std::lock_guard<std::mutex> lock(_timerMutex);
 
     // check if timer id is valid
