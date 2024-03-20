@@ -1,22 +1,47 @@
 
-#include "uOS.h"
-#include <iostream>
-#include <chrono>
 #include <iterator>
 #include <algorithm>
 
+#include "uOS.h"
+
+// #define ASSERT_ON_EXTRA_COPY(event_ptr, target_use_count) assert(event_ptr.use_count() == target_use_count)
 using namespace std::chrono_literals;
 
-#define ASSERT_ON_EXTRA_COPY(event_ptr, target_use_count) \
-assert(event_ptr.use_count() == target_use_count)
+///////////////////////////////////////////////////////////////
+
+// void tuiThreadFunc(void) {
+//     finalcut::FApplication::getApplicationObject()->exec();
+// }
+
+///////////////////////////////////////////////////////////////
 
 
 namespace uOS {
 
 
-void FW::init(void){
+void FW::init(int argc, char* argv[]){
+    // init usage lists
     _taskIdUsageList.fill(false);
     _timerIdUsageList.fill(false);
+
+    // // Create the application object
+    // static finalcut::FApplication app(argc, argv);
+
+    // // Force terminal initialization without calling show()
+    // app.initTerminal();
+
+    // // create logger
+    // static FLogView logger(&app, 300);
+    // finalcut::FWidget::setMainWidget(&logger);
+    // _loggerHandle = &logger;
+
+    // // configure loger
+    // logger.setText(L"Logger");
+    // logger.unsetShadow();
+    // logger.setResizeable(true);
+    // logger.setGeometry(finalcut::FPoint{1,1}, finalcut::FSize{app.getDesktopWidth(), app.getDesktopHeight()});
+    // logger.show();
+    Logger::init(argc, argv);
 
     // lock memory so we're never swapped out to disk   ????
     //mlockall(MCL_CURRENT | MCL_FUTURE);          // uncomment when supported
@@ -36,8 +61,11 @@ int32_t FW::run() {
     // sparam.sched_priority = sched_get_priority_max(SCHED_FIFO);
     // pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam) == 0;  
 
-    // uint_fast8_t i {0};
-    std::cout << "uOS run..." << std::endl;
+    // start logger
+    //std::thread tuiThread(tuiThreadFunc);
+    Logger::start();
+    LOG(uOS::LogLevel::LOG_INFO, "[SYSTEM] Welcome to uOS application...");
+    //std::cout << "uOS run..." << std::endl;
 
     while(_isRunning){
         // now süresini al
@@ -54,15 +82,22 @@ int32_t FW::run() {
         std::this_thread::sleep_until(now + 10ms);
     }
 
-    // onCleanup aşağıdaki satırlar
     // printf("\nBye! Bye!\n");
-    std::cout << "uOS Bye!" << std::endl;
+    //std::cout << "uOS Bye!" << std::endl;
+    LOG(LogLevel::LOG_INFO, "[SYSTEM] uOS Bye bye!");
+
+    // terminate logger
+    // finalcut::FApplication::getApplicationObject()->quit();
+    // tuiThread.join();
+    Logger::stop();
+
+    // onCleanup aşağıdaki satırlar
     // tcsetattr(0, TCSANOW, &l_tsav);   // restore the saved terminal attributes
 
     // hangi mutex bu, neden destroy ediliyor ???
     // pthread_mutex_destroy(&QF_pThreadMutex_);
     
-    stopTask(_taskMap.begin()->first);
+    stopTask(_taskMap.begin()->first);  // todo: buraya tüm task threadleri kapatacak bir kod eklenecek
     return 0;
 }
 
@@ -195,7 +230,8 @@ void FW::subscribe(SignalId signalId, TaskId subsId)
         subsList.push_back(subsId);
     }
 
-    std::cout << "Task Id: " << unsigned(subsId) << "subscribed to Signal Id: " << signalId << std::endl;
+    //std::cout << "Task Id: " << unsigned(subsId) << "subscribed to Signal Id: " << signalId << std::endl;
+    LOG(LogLevel::LOG_INFO, "Task Id: {} subscribed to signalId: {}", subsId, signalId);
 }
 
 void FW::unsubscribe(SignalId signalId, TaskId subsId)
@@ -213,7 +249,8 @@ void FW::unsubscribe(SignalId signalId, TaskId subsId)
 
     // remove subsId from list
     subsList.erase(subsIdIter);
-    std::cout << "taskId " << unsigned(*subsIdIter) << " unsubscibed from signalId " << signalId << std::endl;
+    //std::cout << "taskId " << unsigned(*subsIdIter) << " unsubscibed from signalId " << signalId << std::endl;
+    LOG(LogLevel::LOG_INFO, "Task Id: {} unsubscribed to signalId: {}", subsId, signalId);
 
     //todo: sinyalde subs kalmadıysa map'den sil
 }
@@ -306,7 +343,7 @@ TimerId FW::_setupTimedEvent(bool isPublish, bool isPeriodic, uint_fast16_t inte
     eventPtr = nullptr;
 
     TimerNode timerNode {isPublish, isPeriodic, receiverTaskId, interval, std::move(eventSp) };
-    ASSERT_ON_EXTRA_COPY(timerNode.eventPtr, 1);
+    //ASSERT_ON_EXTRA_COPY(timerNode.eventPtr, 1);
 
     // lock timer related resources
     std::lock_guard<std::mutex> lock(_timerMutex);
@@ -319,10 +356,11 @@ TimerId FW::_setupTimedEvent(bool isPublish, bool isPeriodic, uint_fast16_t inte
 
     // store timer data
     _timerStorageMap.emplace(std::move(timerId), std::move(timerNode));
-    ASSERT_ON_EXTRA_COPY(_timerStorageMap.find(timerId)->second.eventPtr, 1);
+    //ASSERT_ON_EXTRA_COPY(_timerStorageMap.find(timerId)->second.eventPtr, 1);
     // todo: assert if emplace fails
 
-    std::cout << "timer created with timer id: " << timerId << std::endl;
+    //std::cout << "timer created with timer id: " << timerId << std::endl;
+    LOG(LogLevel::LOG_TRACE, "Timer created with timerId: {}", timerId);
     return timerId;
 }
 
@@ -361,11 +399,12 @@ void FW::_handleTick(void)  // todo: inline yap
         // handle expired timers
         for(TimerId timerId : expiredTimers) 
         {
-            std::cout << "expired timer with timer id: " << unsigned(timerId) << std::endl;   
+            //std::cout << "expired timer with timer id: " << unsigned(timerId) << std::endl;  
+            LOG(LogLevel::LOG_TRACE, "Timer expired with timerId: {}", timerId); 
 
             // get stored timer node with the timer key
             TimerNode& timerNode = _timerStorageMap.find(timerId)->second;  // find is thread-safe
-            ASSERT_ON_EXTRA_COPY(timerNode.eventPtr, 1);
+            //ASSERT_ON_EXTRA_COPY(timerNode.eventPtr, 1);
 
             // event'i post et
             // todo: event'i move edersem periyodik olarak tekrar çağırıldığında event kaybolmuyor mu?

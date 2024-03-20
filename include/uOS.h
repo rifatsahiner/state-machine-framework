@@ -7,19 +7,18 @@
 #include <utility>
 #include <functional>
 #include <optional>
+#include <chrono>
 
 #include <array>
 #include <vector>
 #include <forward_list>
 #include <unordered_map>
 
+#include "uOS_defs.h"
 #include "task.h"
+//#include "logger.h"
 
-
-namespace uOS {
-
-
-constexpr uint_fast16_t uOS_FW_MAX_TIMER_COUNT = 2048;
+static constexpr uint_fast16_t uOS_FW_MAX_TIMER_COUNT = 2048;
 
 #if uOS_FW_MAX_TIMER_COUNT > 65536
 using TimerId = uint_fast32_t;
@@ -27,13 +26,9 @@ using TimerId = uint_fast32_t;
 using TimerId = uint_fast16_t;
 #endif
 
-/// Offsets for user signals
-constexpr SignalId INT_SIGNAL_START = static_cast<SignalId>(4);
-constexpr SignalId EXT_SIGNAL_START = static_cast<SignalId>(32);
 
-//////////////////////////////////////////////////////
-//                                                  //
-//////////////////////////////////////////////////////
+namespace uOS {
+
 
 struct TimerNode {
     bool isPublish;
@@ -64,15 +59,11 @@ const T* recast_e(std::shared_ptr<const Event>& eventSptr){
     return static_cast<const T*>(eventSptr.get());
 }
 
-//////////////////////////////////////////////////////
-//                                                  //
-//////////////////////////////////////////////////////
-
 // static class, wont get instatiated
 class FW
 {
     public:
-        static void init(void);
+        static void init(int, char*[]);
         static int32_t run(void);
         static void stop(void);
 
@@ -105,6 +96,8 @@ class FW
         static inline std::unordered_map<SignalId, std::vector<TaskId>> _subsMap;
         static inline std::mutex _subsMutex;
 
+        //static inline FLogView* _loggerHandle;
+
         static TaskId _getAvailableTaskId(void);
         static TimerId _getAvailableTimerId(void);
         static void _insertTimerQueue(TimerId, uint_fast16_t);
@@ -113,6 +106,8 @@ class FW
         static void _publishEvent(std::shared_ptr<const Event>&);
         static void _publishEventCommon(std::shared_ptr<const Event>&, std::vector<TaskId>&);
 
+        // static void _tuiThreadFunc(void);
+
         static void subscribe(SignalId, TaskId);
         static void unsubscribe(SignalId, TaskId);
 
@@ -120,18 +115,18 @@ class FW
 
     public:
         template <class T, class... TaskArgs>
-        static TaskId createTask(const std::string& taskName = "", const TaskArgs&... taskArgs)
+        static TaskId createTask(std::string&& taskName = "", const TaskArgs&... taskArgs)
         {   
             static_assert(std::is_base_of_v<Task, T>);
             std::lock_guard<std::mutex> lock(_taskMutex);
 
             TaskId newTaskId = FW::_getAvailableTaskId();
             
-            const auto [_, result] = _taskMap.emplace(newTaskId, std::make_unique<T>(newTaskId, taskName, taskArgs...));
+            const auto [_, result] = _taskMap.emplace(newTaskId, std::make_unique<T>(newTaskId, std::move(taskName), taskArgs...));
             assert(result == true);
 
             return newTaskId;
-        }   
+        }
 };
 
 // event queue  -> std::deque with std::lock_guard

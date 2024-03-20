@@ -1,5 +1,5 @@
-#ifndef DENEME1_H
-#define DENEME1_H
+#ifndef APP1_H
+#define APP1_H
 
 #include "uOS.h"
 
@@ -7,24 +7,24 @@
 
 namespace App1 {
 
-extern uOS::TaskId g_hsmTestId;
+extern uOS::TaskId g_simpleTaskId;
 
 // external (inter-task) signals
-enum AppSignals : uOS::SignalId
-{
-    SIGNAL_A = uOS::EXT_SIGNAL_START,
-    SIGNAL_B,
-    SIGNAL_C,
-    SIGNAL_D,
-    SIGNAL_E,
-    SIGNAL_F,
-    SIGNAL_G,
-    SIGNAL_H,
-    SIGNAL_I,
-    TERMINATE,
-    IGNORE,
-    SIGNAL_LIST_COUNT
-};
+// enum AppSignals : uOS::SignalId
+// {
+//     SIGNAL_A = uOS::EXT_SIGNAL_START,
+//     SIGNAL_B,
+//     SIGNAL_C,
+//     SIGNAL_D,
+//     SIGNAL_E,
+//     SIGNAL_F,
+//     SIGNAL_G,
+//     SIGNAL_H,
+//     SIGNAL_I,
+//     TERMINATE,
+//     IGNORE,
+//     SIGNAL_LIST_COUNT
+// };
 
 //external event types
 // struct Event1 : uOS::Event {

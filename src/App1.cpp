@@ -4,7 +4,7 @@
 namespace App1 {
 
 
-uOS::TaskId g_hsmTestId;
+uOS::TaskId g_simpleTaskId;
 
 
 }

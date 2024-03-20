@@ -15,7 +15,7 @@ BUILD := build
 
 # Library search directories and flags
 EXT_LIB :=
-LDFLAGS :=
+LDFLAGS := -lfinal -lncurses -lrt -lfmt
 LDPATHS := $(addprefix -L,$(LIB) $(EXT_LIB))
 
 # Include directories

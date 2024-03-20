@@ -1,18 +1,13 @@
 #ifndef STATE_MACHINE_H
 #define STATE_MACHINE_H
 
-#include <cstdint>
 #include <memory>
+
+#include "uOS_defs.h"
 
 
 namespace uOS {
 
-
-using SignalId = uint_fast16_t;
-
-struct Event {
-    SignalId signal;
-};
 
 enum class HandleResult : uint_fast8_t {
     Handled,

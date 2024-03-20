@@ -1,30 +1,20 @@
 
-#include <iostream>
 #include "uOS.h"
 #include "App1.h"
-#include "hsm_test.h"
-#include "key_reader.h"
+#include "simple-task.h"
 
 int main(int argc, char* argv[])
 {
-    // int32_t r;
-    (void)argc;
-    (void)argv;
+    // std::cout << "HSM test example\n";
+    // std::cout << "Press ESC to quit...\n";
 
-    std::cout << "HSM test example\n";
-    std::cout << "Press ESC to quit...\n";
-
-    uOS::FW::init();
+    uOS::FW::init(argc, argv);
 
     // create test task
-    App1::g_hsmTestId = uOS::FW::createTask<App1::HsmTest>("HSM-test");
+    App1::g_simpleTaskId = uOS::FW::createTask<App1::SimpleTask>("simple-task");
 
     // start test task
-    uOS::FW::startTask(App1::g_hsmTestId);
-
-    // create keyboard reader task (no FW)
-    std::thread t(App1::keyReadThread);
-    t.detach();
+    uOS::FW::startTask(App1::g_simpleTaskId);
 
     exit(uOS::FW::run());
 }

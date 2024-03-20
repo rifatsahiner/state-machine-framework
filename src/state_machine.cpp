@@ -2,9 +2,9 @@
 #include <vector>
 #include <cassert>
 #include <algorithm>
-#include <iostream>
 
 #include "state_machine.h"
+#include "logger.h"
 
 
 namespace uOS {
@@ -84,7 +84,8 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
             // exit source and enter the target
             (this->*sourceState)(EXIT_EVENT_PTR);
             entryPath.push_back(targetState);
-            std::cout << "\nTransition A happened\n" << std::endl;
+            //std::cout << "\nTransition A happened\n" << std::endl;
+            LOG(LogLevel::LOG_TRACE, "[SYSTEM] Transition A");
         } else 
         {
             // --- (b) source is the superstate of target (b) ---
@@ -93,7 +94,8 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
             if(sourceState == _tempTargetState){
                 // just enter the target
                 entryPath.push_back(targetState);
-                std::cout << "\nTransition B happened\n" << std::endl;
+                //std::cout << "\nTransition B happened\n" << std::endl;
+                LOG(LogLevel::LOG_TRACE, "[SYSTEM] Transition B");
             } else 
             {
                 // --- (c) source and target are at the same level (c) ---
@@ -104,7 +106,8 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
                     // exit source and enter the target
                     (this->*sourceState)(EXIT_EVENT_PTR);
                     entryPath.push_back(targetState);
-                    std::cout << "\nTransition C happened\n" << std::endl;
+                    //std::cout << "\nTransition C happened\n" << std::endl;
+                    LOG(LogLevel::LOG_TRACE, "[SYSTEM] Transition C");
                 } else 
                 {
                     // --- (d) target is the superstate of source (d) ---
@@ -112,7 +115,8 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
                     if(_tempTargetState == targetState){
                         // just exit the source
                         (this->*sourceState)(EXIT_EVENT_PTR);
-                        std::cout << "\nTransition D happened\n" << std::endl;
+                        //std::cout << "\nTransition D happened\n" << std::endl;
+                        LOG(LogLevel::LOG_TRACE, "[SYSTEM] Transition D");
                     } else {
                         bool isLcaFound = false;
                         
@@ -129,7 +133,8 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
                             {
                                 // LCA is the source (means case is "e")
                                 isLcaFound = true;
-                                std::cout << "\nTransition E happened\n" << std::endl;
+                                //std::cout << "\nTransition E happened\n" << std::endl;
+                                LOG(LogLevel::LOG_TRACE, "[SYSTEM] Transition E");
                                 break;
                             } else
                             {
@@ -152,7 +157,8 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
                                 // --- (f) LCA is source's super (f) ---
                                 // remove source's super and higher states from path
                                 entryPath.erase(lcaIter, entryPath.end());
-                                std::cout << "\nTransition F happened\n" << std::endl;
+                                //std::cout << "\nTransition F happened\n" << std::endl;
+                                LOG(LogLevel::LOG_TRACE, "[SYSTEM] Transition F");
                             } else
                             {
                                 // --- (g)(h) LCA is multiple levels higher than source (g)(h) ---
@@ -170,7 +176,8 @@ void StateMachine::dispatch(const std::shared_ptr<const Event>& event)
 
                                 // remove LCA and higher states from path
                                 entryPath.erase(lcaIter, entryPath.end());
-                                std::cout << "\nTransition G/H happened\n" << std::endl;
+                                //std::cout << "\nTransition G/H happened\n" << std::endl;
+                                LOG(LogLevel::LOG_TRACE, "[SYSTEM] Transition G/H");
                             }
                         }
                     }

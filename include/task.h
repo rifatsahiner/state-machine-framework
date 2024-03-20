@@ -4,26 +4,15 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-
 #include <queue>
 
+#include "uOS_defs.h"
 #include "state_machine.h"
+#include "logger.h"
 
 
 namespace uOS {
 
-
-constexpr uint_fast16_t uOS_FW_MAX_TASK_COUNT = 256;         // todo: bunlar uos_config.h dosyasına taşınacak
-
-#if uOS_FW_MAX_TASK_COUNT > 256
-using TaskId = uint_fast16_t;
-#else
-using TaskId = uint_fast8_t;
-#endif
-
-//////////////////////////////////////////////////////
-//                                                  //
-//////////////////////////////////////////////////////
 
 class Task : public StateMachine
 {
@@ -37,7 +26,7 @@ class Task : public StateMachine
         //void deleteTask(void);  // delete is keyword -- destructor ile yapabiliriz
 
     protected:
-        Task(const TaskId, const std::string&);
+        Task(const TaskId, std::string&&);
         Task() = delete;
         Task(const Task& other) = delete;
         Task& operator= (const Task& rhs) = delete;
@@ -48,6 +37,7 @@ class Task : public StateMachine
 
         const TaskId _taskId;
         const std::string _name;
+        const std::string _logPrefix;
 
     private:
         void _taskLoop(void);
@@ -61,9 +51,22 @@ class Task : public StateMachine
         std::thread _taskThead;
         std::mutex _threadMutex;
         std::condition_variable _taskCv;
+
+    protected:
+        template <class... LogStrArgs>
+        void log__(const char* file, const char* function, int line, LogLevel level, const std::string& logStr, LogStrArgs&... logStrArgs) {
+            // format logStr
+            auto formattedStr = fmt::format(logStr, logStrArgs...);
+
+            //add task prefix
+            formattedStr.insert(0, _logPrefix);
+
+            // sent to logger
+            Logger::log(file, function, line, level, formattedStr);
+        } 
 };
 
-}   // namespace uOS
 
+}   // namespace uOS
 
 #endif
