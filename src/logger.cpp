@@ -9,24 +9,28 @@ void tuiThreadFunc(void) {
 namespace uOS {
 
 
-void Logger::init(int argc, char* argv[])
+void Logger::init(int argc, char* argv[], std::function<void(void)> quitCb)
 {
-    static finalcut::FApplication app(argc, argv);
+    //static finalcut::FApplication app(argc, argv);
+    _appPtr = new finalcut::FApplication(argc, argv);
 
     // Force terminal initialization without calling show()
-    app.initTerminal();
+    //app.initTerminal();
+    _appPtr->initTerminal();
 
     // create logger
-    static FLogView logger(&app, 300);
-    finalcut::FWidget::setMainWidget(&logger);
-    _loggerHandle = &logger;
+    //static FLogView logger(&app, 1000);
+    //_loggerHandle = &logger;
+    _logViewPtr = new FLogView(_appPtr, 1000);
+    finalcut::FWidget::setMainWidget(_logViewPtr);
 
     // configure loger
-    logger.setText(L"Logger");
-    logger.unsetShadow();
-    logger.setResizeable(true);
-    logger.setGeometry(finalcut::FPoint{1,1}, finalcut::FSize{app.getDesktopWidth(), app.getDesktopHeight()});
-    logger.show();
+    _logViewPtr->setText(L"Logger");
+    _logViewPtr->unsetShadow();
+    _logViewPtr->setResizeable(true);
+    _logViewPtr->setGeometry(finalcut::FPoint{1,1}, finalcut::FSize{_appPtr->getDesktopWidth(), _appPtr->getDesktopHeight()});
+    _logViewPtr->registerOnQuit(quitCb);
+    _logViewPtr->show();  // todo: bunu start'a taşıyabiliriz
 }
 
 void Logger::start(void) {
@@ -36,6 +40,7 @@ void Logger::start(void) {
 void Logger::stop(void) {
     finalcut::FApplication::getApplicationObject()->quit();
     _loggerThread.join();
+    delete _appPtr;
 }
 
 void Logger::log(const char* file, const char* function, int line, LogLevel level, std::string& formattedLogStr) {
@@ -43,7 +48,7 @@ void Logger::log(const char* file, const char* function, int line, LogLevel leve
     auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::tm* timeStruct = std::localtime(&now);
 
-    // "HH:MM:SS FILE:LINE:FUNC logstr"
+    // "HH:MM:SS FILE:LINE:FUNC [|] logstr"
     // add space and function
     formattedLogStr.insert(0, " [|] ");
     formattedLogStr.insert(0, function);
@@ -85,7 +90,7 @@ void Logger::log(const char* file, const char* function, int line, LogLevel leve
     const auto wide_length = std::mbsrtowcs(dest.data(), &src, size, &state);
 
     // print to log view
-    _loggerHandle->log(std::wstring{dest.data(), wide_length}, static_cast<FLogView::LogLevel>(level));
+    _logViewPtr->log(std::wstring{dest.data(), wide_length}, static_cast<FLogView::LogLevel>(level));
 }
 
 

@@ -16,7 +16,6 @@
 
 #include "uOS_defs.h"
 #include "task.h"
-//#include "logger.h"
 
 static constexpr uint_fast16_t uOS_FW_MAX_TIMER_COUNT = 2048;
 
@@ -96,8 +95,6 @@ class FW
         static inline std::unordered_map<SignalId, std::vector<TaskId>> _subsMap;
         static inline std::mutex _subsMutex;
 
-        //static inline FLogView* _loggerHandle;
-
         static TaskId _getAvailableTaskId(void);
         static TimerId _getAvailableTimerId(void);
         static void _insertTimerQueue(TimerId, uint_fast16_t);
@@ -105,8 +102,6 @@ class FW
         static void _handleTick(void);
         static void _publishEvent(std::shared_ptr<const Event>&);
         static void _publishEventCommon(std::shared_ptr<const Event>&, std::vector<TaskId>&);
-
-        // static void _tuiThreadFunc(void);
 
         static void subscribe(SignalId, TaskId);
         static void unsubscribe(SignalId, TaskId);

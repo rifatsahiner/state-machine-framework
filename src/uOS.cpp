@@ -7,14 +7,6 @@
 // #define ASSERT_ON_EXTRA_COPY(event_ptr, target_use_count) assert(event_ptr.use_count() == target_use_count)
 using namespace std::chrono_literals;
 
-///////////////////////////////////////////////////////////////
-
-// void tuiThreadFunc(void) {
-//     finalcut::FApplication::getApplicationObject()->exec();
-// }
-
-///////////////////////////////////////////////////////////////
-
 
 namespace uOS {
 
@@ -41,7 +33,7 @@ void FW::init(int argc, char* argv[]){
     // logger.setResizeable(true);
     // logger.setGeometry(finalcut::FPoint{1,1}, finalcut::FSize{app.getDesktopWidth(), app.getDesktopHeight()});
     // logger.show();
-    Logger::init(argc, argv);
+    Logger::init(argc, argv, &FW::stop);
 
     // lock memory so we're never swapped out to disk   ????
     //mlockall(MCL_CURRENT | MCL_FUTURE);          // uncomment when supported
@@ -82,13 +74,13 @@ int32_t FW::run() {
         std::this_thread::sleep_until(now + 10ms);
     }
 
-    // printf("\nBye! Bye!\n");
-    //std::cout << "uOS Bye!" << std::endl;
+    // terminate all task threads
+    // todo: buraya tüm task threadleri kapatacak bir kod eklenecek
+    stopTask(_taskMap.begin()->first); 
+
     LOG(LogLevel::LOG_INFO, "[SYSTEM] uOS Bye bye!");
 
     // terminate logger
-    // finalcut::FApplication::getApplicationObject()->quit();
-    // tuiThread.join();
     Logger::stop();
 
     // onCleanup aşağıdaki satırlar
@@ -96,8 +88,7 @@ int32_t FW::run() {
 
     // hangi mutex bu, neden destroy ediliyor ???
     // pthread_mutex_destroy(&QF_pThreadMutex_);
-    
-    stopTask(_taskMap.begin()->first);  // todo: buraya tüm task threadleri kapatacak bir kod eklenecek
+
     return 0;
 }
 

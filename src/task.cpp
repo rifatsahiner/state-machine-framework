@@ -55,6 +55,7 @@ void Task::stop(void)
         _isUnlocked = true;
         _taskCv.notify_one();
     }
+    _taskThead.join();  // todo: bool bir parametre ile bekleme olmadan da çıkılabilecek
 }
 
 void Task::resume(void) {
