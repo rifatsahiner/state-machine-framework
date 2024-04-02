@@ -17,8 +17,6 @@
 #include "uOS_defs.h"
 #include "task.h"
 
-static constexpr uint_fast16_t uOS_FW_MAX_TIMER_COUNT = 2048;
-
 #if uOS_FW_MAX_TIMER_COUNT > 65536
 using TimerId = uint_fast32_t;
 #else
@@ -28,17 +26,6 @@ using TimerId = uint_fast16_t;
 
 namespace uOS {
 
-
-struct TimerNode {
-    bool isPublish;
-    bool isPeriodic;
-    TaskId receiverTaskId;
-    uint_fast16_t interval;
-    std::shared_ptr<const Event> eventPtr;
-
-    // default move constructor kullanıldığını belirt
-    // TimerNode(TimerNode&& other) = default;
-};
 
 template <class T = Event>
 T* new_e(std::optional<SignalId> signalId = std::nullopt)
@@ -62,15 +49,18 @@ const T* recast_e(std::shared_ptr<const Event>& eventSptr){
 class FW
 {
     public:
-        static void init(int, char*[]);
+        // fw op
+        static void init(int = 0, char*[] = nullptr);
         static int32_t run(void);
         static void stop(void);
 
+        // task op
         static void startTask(TaskId);
         static void stopTask(TaskId);
         static bool resumeTask(TaskId);
         static bool deleteTask(TaskId);
 
+        // event delivery 
         static void postEvent(TaskId, const Event*);
         static void publishEvent(const Event*);
 
@@ -80,21 +70,38 @@ class FW
         static TimerId publishEventEvery(uint_fast16_t intervalMs, const Event*);
         static void cancelTimedEvent(TimerId);
 
+        // pub/sub
+
     private:
+        // private definitions
+        struct TimerNode {
+            bool isPublish;
+            bool isPeriodic;
+            TaskId receiverTaskId;
+            uint_fast16_t interval;
+            std::shared_ptr<const Event> eventPtr;
+        };
+
+        static constexpr uint_fast16_t uOS_FW_MAX_TIMER_COUNT = 2048;
+
         static volatile inline bool _isRunning = true;
 
+        // task related
         static inline std::array<bool, uOS_FW_MAX_TASK_COUNT> _taskIdUsageList;
         static inline std::unordered_map<TaskId, std::unique_ptr<Task>> _taskMap;
         static inline std::mutex _taskMutex;
 
+        // timer related
         static inline std::array<bool, uOS_FW_MAX_TIMER_COUNT> _timerIdUsageList;
         static inline std::unordered_map<TimerId, TimerNode> _timerStorageMap;
         static inline std::forward_list<std::pair<TimerId, uint_fast16_t>> _timerQueue;
         static inline std::mutex _timerMutex;
 
+        // pub-sub related
         static inline std::unordered_map<SignalId, std::vector<TaskId>> _subsMap;
         static inline std::mutex _subsMutex;
 
+        // private functions
         static TaskId _getAvailableTaskId(void);
         static TimerId _getAvailableTimerId(void);
         static void _insertTimerQueue(TimerId, uint_fast16_t);
@@ -103,8 +110,8 @@ class FW
         static void _publishEvent(std::shared_ptr<const Event>&);
         static void _publishEventCommon(std::shared_ptr<const Event>&, std::vector<TaskId>&);
 
-        static void subscribe(SignalId, TaskId);
-        static void unsubscribe(SignalId, TaskId);
+        static void subscribe(SignalId, TaskId);    // todo: bunlar public olacak, task class'ından friend function olarak işaretlenecek
+        static void unsubscribe(SignalId, TaskId);  // Task* parametresi alacak, task'dan this ile çağırılacak. "friend class Task;" -> bu kaldırılacak
 
         friend class Task;
 

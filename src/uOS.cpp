@@ -16,24 +16,10 @@ void FW::init(int argc, char* argv[]){
     _taskIdUsageList.fill(false);
     _timerIdUsageList.fill(false);
 
-    // // Create the application object
-    // static finalcut::FApplication app(argc, argv);
-
-    // // Force terminal initialization without calling show()
-    // app.initTerminal();
-
-    // // create logger
-    // static FLogView logger(&app, 300);
-    // finalcut::FWidget::setMainWidget(&logger);
-    // _loggerHandle = &logger;
-
-    // // configure loger
-    // logger.setText(L"Logger");
-    // logger.unsetShadow();
-    // logger.setResizeable(true);
-    // logger.setGeometry(finalcut::FPoint{1,1}, finalcut::FSize{app.getDesktopWidth(), app.getDesktopHeight()});
-    // logger.show();
-    Logger::init(argc, argv, &FW::stop);
+    // init logger if activated
+    if(argc != 0){
+        Logger::init(argc, argv, &FW::stop);
+    }
 
     // lock memory so we're never swapped out to disk   ????
     //mlockall(MCL_CURRENT | MCL_FUTURE);          // uncomment when supported

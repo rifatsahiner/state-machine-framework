@@ -24,7 +24,7 @@ constexpr SignalId EXT_SIGNAL_START = static_cast<SignalId>(32);
 
 // event
 struct Event {
-    SignalId signal;
+    SignalId signal;    // todo acil: optional senderId ekelenecek
 };
 
 // log levels

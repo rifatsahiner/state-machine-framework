@@ -30,7 +30,7 @@ class StateMachine {
         StateMachine() : _currentState{&StateMachine::top} {}
         virtual ~StateMachine() {};
 
-        void init(void);    // todo: bunlar protected olacak
+        void init(void);
         void dispatch(const std::shared_ptr<const Event>& event);
         bool isIn(const State);
 

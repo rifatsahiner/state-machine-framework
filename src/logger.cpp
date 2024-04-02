@@ -1,4 +1,6 @@
 
+#include <optional>
+
 #include "logger.h"
 #include "flogview.h"
 
@@ -12,77 +14,112 @@ namespace uOS {
 void Logger::init(int argc, char* argv[], std::function<void(void)> quitCb)
 {
     //static finalcut::FApplication app(argc, argv);
-    _appPtr = new finalcut::FApplication(argc, argv);
+    _tui = new finalcut::FApplication(argc, argv);
 
     // Force terminal initialization without calling show()
     //app.initTerminal();
-    _appPtr->initTerminal();
+    _tui->initTerminal();
 
     // create logger
-    //static FLogView logger(&app, 1000);
-    //_loggerHandle = &logger;
-    _logViewPtr = new FLogView(_appPtr, 1000);
-    finalcut::FWidget::setMainWidget(_logViewPtr);
+    //_loggerFw = new FLogView(_tui, 2000);
+    _loggerTasks = new FLogViewMulti(_tui, 2000);
+    finalcut::FWidget::setMainWidget(_loggerTasks);
 
     // configure loger
-    _logViewPtr->setText(L"Logger");
-    _logViewPtr->unsetShadow();
-    _logViewPtr->setResizeable(true);
-    _logViewPtr->setGeometry(finalcut::FPoint{1,1}, finalcut::FSize{_appPtr->getDesktopWidth(), _appPtr->getDesktopHeight()});
-    _logViewPtr->registerOnQuit(quitCb);
-    _logViewPtr->show();  // todo: bunu start'a taşıyabiliriz
+    _loggerTasks->setText(L"Logger");
+    _loggerTasks->unsetShadow();
+    _loggerTasks->setResizeable(true);
+    _loggerTasks->setGeometry(finalcut::FPoint{1,1}, finalcut::FSize{_tui->getDesktopWidth(), _tui->getDesktopHeight()});
+    _loggerTasks->registerOnQuit(quitCb);
+    _loggerTasks->show();  // todo: bunu start'a taşıyabiliriz
 }
 
 void Logger::start(void) {
-    _loggerThread = std::thread{tuiThreadFunc};
+    if(_tui != nullptr){
+        _loggerThread = std::thread{tuiThreadFunc};
+    }
+    //_isActive = true;
 }
 
 void Logger::stop(void) {
-    finalcut::FApplication::getApplicationObject()->quit();
+    _tui->quit();
     _loggerThread.join();
-    delete _appPtr;
+    delete _tui;
+    _tui = nullptr;
+    //_isActive = false;
 }
 
-void Logger::log(const char* file, const char* function, int line, LogLevel level, std::string& formattedLogStr) {
+void Logger::addTaskLogger(const TaskId taskId, const std::string& taskName) {
+    if(_tui != nullptr){
+        _loggerTasks->createView(static_cast<uint_fast16_t>(taskId), taskName);
+    }
+}
+
+void Logger::removeTaskLogger(const TaskId taskId) {
+    _loggerTasks->removeView(static_cast<uint_fast16_t>(taskId));
+}
+
+void Logger::logFw(const char* file, const char* function, int line, LogLevel level, std::string& formattedLogStr) {
+    // send string for formatting time and path
+    _logCommon(file, function, line, level, formattedLogStr);
+}
+
+void Logger::logTask(const char*, const char*, int, LogLevel, TaskId, std::string&) {
+
+}
+
+bool Logger::isActive(void) {
+    if(_tui == nullptr){
+        return false;
+    } else {
+        return false;
+    }
+}
+
+//////////////////////////////////////////////////////
+//                                                  //
+//////////////////////////////////////////////////////
+
+inline void Logger::_logCommon(const char* file, const char* function, int line, LogLevel level, std::string& logStr, std::optional<TaskId> taskId) {
     // Get the current time and convert to time struct
     auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::tm* timeStruct = std::localtime(&now);
 
     // "HH:MM:SS FILE:LINE:FUNC [|] logstr"
     // add space and function
-    formattedLogStr.insert(0, " [|] ");
-    formattedLogStr.insert(0, function);
-    formattedLogStr.insert(0, 1, ':');
+    logStr.insert(0, " [|] ");
+    logStr.insert(0, function);
+    logStr.insert(0, 1, ':');
     // add line
-    formattedLogStr.insert(0, std::to_string(line));
-    formattedLogStr.insert(0, 1, ':');
+    logStr.insert(0, std::to_string(line));
+    logStr.insert(0, 1, ':');
     // add file
     // remove file path
-    formattedLogStr.insert(0, file);
-    auto pos = formattedLogStr.find_first_of('/');
+    logStr.insert(0, file);
+    auto pos = logStr.find_first_of('/');
     if(pos != std::string::npos){
-        formattedLogStr.erase(0, pos+1);
+        logStr.erase(0, pos+1);
     }
-    formattedLogStr.insert(0, 1, ' ');
+    logStr.insert(0, 1, ' ');
     //add sec
-    formattedLogStr.insert(0, std::to_string(timeStruct->tm_sec));
+    logStr.insert(0, std::to_string(timeStruct->tm_sec));
     if(timeStruct->tm_sec < 10)
-        formattedLogStr.insert(0, ":0");
+        logStr.insert(0, ":0");
     else 
-        formattedLogStr.insert(0, 1, ':');
+        logStr.insert(0, 1, ':');
     // add min
-    formattedLogStr.insert(0, std::to_string(timeStruct->tm_min));
+    logStr.insert(0, std::to_string(timeStruct->tm_min));
     if(timeStruct->tm_min < 10)
-        formattedLogStr.insert(0, ":0");
+        logStr.insert(0, ":0");
     else 
-        formattedLogStr.insert(0, 1, ':');
+        logStr.insert(0, 1, ':');
     // add hour
-    formattedLogStr.insert(0, std::to_string(timeStruct->tm_hour));
+    logStr.insert(0, std::to_string(timeStruct->tm_hour));
     if(timeStruct->tm_hour < 10)
-        formattedLogStr.insert(0, 1, '0');
-    
+        logStr.insert(0, 1, '0');
+
     // convert string to wide string
-    auto src = formattedLogStr.c_str();
+    auto src = logStr.c_str();
     auto state = std::mbstate_t();
     auto size = std::mbsrtowcs(nullptr, &src, 0, &state) + 1;
 
@@ -90,8 +127,12 @@ void Logger::log(const char* file, const char* function, int line, LogLevel leve
     const auto wide_length = std::mbsrtowcs(dest.data(), &src, size, &state);
 
     // print to log view
-    _logViewPtr->log(std::wstring{dest.data(), wide_length}, static_cast<FLogView::LogLevel>(level));
+    if(taskId){
+        _loggerTasks->log(std::wstring{dest.data(), wide_length}, static_cast<FLogView::LogLevel>(level), static_cast<uint16_t>(taskId.value()));
+    } else {
+        _loggerFw->log(std::wstring{dest.data(), wide_length}, static_cast<FLogView::LogLevel>(level));
+    }
 }
 
 
-}
+}   // namespace uOS

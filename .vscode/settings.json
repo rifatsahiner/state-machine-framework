@@ -57,7 +57,8 @@
         "list": "cpp",
         "map": "cpp",
         "iomanip": "cpp",
-        "shared_mutex": "cpp"
+        "shared_mutex": "cpp",
+        "codecvt": "cpp"
     },
     "makefile.launchConfigurations": [
         {

@@ -4,10 +4,17 @@
 #include "uOS.h"
 #include "logger.h"
 
+
 namespace uOS {
 
 
-Task::Task(const TaskId taskId, std::string&& taskName) : _taskId{taskId}, _name{std::move(taskName)}, _logPrefix{"[" + _name + "] "} { }
+Task::Task(const TaskId taskId, std::string&& taskName) : _id{taskId}, _name{std::move(taskName)} {
+    Logger::addTaskLogger(_id, _name);
+}
+
+Task::~Task() {
+    Logger::removeTaskLogger(_id);
+}
 
 void Task::start(void)
 {
@@ -67,9 +74,9 @@ void Task::resume(void) {
     }
 }
 
-void Task::subscribe(SignalId signalId) { FW::subscribe(signalId, _taskId); }
+void Task::subscribe(SignalId signalId) { FW::subscribe(signalId, _id); }
 
-void Task::unsubscribe(SignalId signalId) { FW::unsubscribe(signalId, _taskId); }
+void Task::unsubscribe(SignalId signalId) { FW::unsubscribe(signalId, _id); }
 
 // todo: bunu _putEvent yapabilir miyiz?
 // bu değişecek const Event* alacak, içeride FW::post çağıracak

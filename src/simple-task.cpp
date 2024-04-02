@@ -16,7 +16,7 @@ SimpleTask::SimpleTask(const uOS::TaskId taskId, std::string&& taskName) : Task 
 
 uOS::HandleResult SimpleTask::_topInitialTrans(void){
     auto event = uOS::new_e(SIGNAL_LOG);
-    uOS::FW::postEventEvery(2000, _taskId, event);
+    uOS::FW::postEventEvery(2000, _id, event);
 
     //std::cout << "top-INIT;";
     LOG(uOS::LogLevel::LOG_INFO, "top-INIT");

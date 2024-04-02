@@ -17,12 +17,12 @@ namespace uOS {
 class Task : public StateMachine
 {
     public:
-        virtual ~Task() {};
+        virtual ~Task();
 
         void start(void);
-        void putEvent(std::shared_ptr<const Event>&&);
         void stop(void);
         void resume(void);
+        void putEvent(std::shared_ptr<const Event>&&);
         //void deleteTask(void);  // delete is keyword -- destructor ile yapabiliriz
 
     protected:
@@ -35,9 +35,9 @@ class Task : public StateMachine
         void unsubscribe(SignalId);
         void putEvent(std::shared_ptr<const Event>&);
 
-        const TaskId _taskId;
+        const TaskId _id;
         const std::string _name;
-        const std::string _logPrefix;
+        //const std::string _logPrefix;
 
     private:
         void _taskLoop(void);
@@ -55,14 +55,14 @@ class Task : public StateMachine
     protected:
         template <class... LogStrArgs>
         void log__(const char* file, const char* function, int line, LogLevel level, const std::string& logStr, LogStrArgs&... logStrArgs) {
+            if(Logger::isActive() == false) {
+                return;
+            }
             // format logStr
             auto formattedStr = fmt::format(logStr, logStrArgs...);
 
-            //add task prefix
-            formattedStr.insert(0, _logPrefix);
-
             // sent to logger
-            Logger::log(file, function, line, level, formattedStr);
+            Logger::logTask(file, function, line, level, _id, formattedStr);
         } 
 };
 
