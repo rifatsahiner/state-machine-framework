@@ -4,22 +4,25 @@
 
 #include "uOS.h"
 
+using namespace uOS;
+
 
 namespace App1 {
 
 
-class SimpleTask : public uOS::Task {
+class SimpleTask : public Task {
     public:
-        SimpleTask(const uOS::TaskId, std::string&&);   
+        SimpleTask(const TaskId, std::string&&);   
 
     private:
         uint16_t _counter{0};
 
-        uOS::HandleResult _topInitialTrans(void) override;
-        uOS::HandleResult singleState(const std::shared_ptr<const uOS::Event>&);
+        HandleResult _topInitialTrans(void) override;
+        HandleResult singleState(const std::shared_ptr<const Event>&);
 };
 
 
 }   // namespace App1
 
-#endif
+
+#endif  // SIMPLE_TASK_H

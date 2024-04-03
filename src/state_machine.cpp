@@ -11,16 +11,16 @@ namespace uOS {
 
 
 static constexpr SignalId EMPTY_SIG = static_cast<SignalId>(0);
-static constexpr Event EMPTY_EVENT {EMPTY_SIG};
+static constexpr Event EMPTY_EVENT {EMPTY_SIG, std::nullopt};
 static const auto EMPTY_EVENT_PTR = std::make_shared<const Event>(EMPTY_EVENT);
 
-static constexpr Event ENTRY_EVENT {static_cast<SignalId>(1)};
+static constexpr Event ENTRY_EVENT {static_cast<SignalId>(1), std::nullopt};
 static const auto ENTRY_EVENT_PTR = std::make_shared<const Event>(ENTRY_EVENT);
 
-static constexpr Event EXIT_EVENT {static_cast<SignalId>(2)};
+static constexpr Event EXIT_EVENT {static_cast<SignalId>(2), std::nullopt};
 static const auto EXIT_EVENT_PTR = std::make_shared<const Event>(EXIT_EVENT);
 
-static constexpr Event INIT_EVENT {static_cast<SignalId>(3)};
+static constexpr Event INIT_EVENT {static_cast<SignalId>(3), std::nullopt};
 static const auto INIT_EVENT_PTR = std::make_shared<const Event>(INIT_EVENT);
 
 

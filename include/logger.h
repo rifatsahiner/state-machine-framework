@@ -25,7 +25,7 @@ class Logger {
         static void addTaskLogger(const TaskId, const std::string&);
         static void removeTaskLogger(const TaskId);
         static void logFw(const char*, const char*, int, LogLevel, std::string&);
-        static void logTask(const char*, const char*, int, LogLevel, TaskId, std::string&);
+        static void logTask(const char*, const char*, int, LogLevel, std::string&, TaskId);
         static bool isActive(void);
     
     private:

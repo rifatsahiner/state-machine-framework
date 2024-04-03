@@ -33,11 +33,18 @@ class Task : public StateMachine
 
         void subscribe(SignalId);
         void unsubscribe(SignalId);
-        void putEvent(std::shared_ptr<const Event>&);
+        void putEvent(std::shared_ptr<const Event>&);   // todo: bunun adı selfPost benzeri birşey olacak
 
         const TaskId _id;
         const std::string _name;
-        //const std::string _logPrefix;
+        
+        template <class T = Event>
+        T* new_e(std::optional<SignalId> signalId = std::nullopt)
+        {
+            T* e = uOS::new_e<T>(signalId);
+            e->source = _id;
+            return e;
+        }
 
     private:
         void _taskLoop(void);
@@ -62,11 +69,12 @@ class Task : public StateMachine
             auto formattedStr = fmt::format(logStr, logStrArgs...);
 
             // sent to logger
-            Logger::logTask(file, function, line, level, _id, formattedStr);
+            Logger::logTask(file, function, line, level, formattedStr, _id);
         } 
 };
 
 
 }   // namespace uOS
 
-#endif
+
+#endif  // TASK_H

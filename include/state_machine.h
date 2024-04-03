@@ -1,8 +1,6 @@
 #ifndef STATE_MACHINE_H
 #define STATE_MACHINE_H
 
-#include <memory>
-
 #include "uOS_defs.h"
 
 
@@ -98,6 +96,7 @@ class StateMachine {
 };
 
 
-} // namespace STATE_MACHINE_H
+} // namespace uOS
 
-#endif
+
+#endif  // STATE_MACHINE_H

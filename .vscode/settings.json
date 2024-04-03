@@ -58,7 +58,8 @@
         "map": "cpp",
         "iomanip": "cpp",
         "shared_mutex": "cpp",
-        "codecvt": "cpp"
+        "codecvt": "cpp",
+        "cassert": "cpp"
     },
     "makefile.launchConfigurations": [
         {

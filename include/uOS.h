@@ -27,24 +27,6 @@ using TimerId = uint_fast16_t;
 namespace uOS {
 
 
-template <class T = Event>
-T* new_e(std::optional<SignalId> signalId = std::nullopt)
-{
-    static_assert(std::is_base_of_v<Event, T>);
-    
-    T* newEventPtr = new T; 
-    if(signalId){
-        newEventPtr->signal = signalId.value();
-    }
-    return newEventPtr;
-}
-
-template <class T>
-const T* recast_e(std::shared_ptr<const Event>& eventSptr){
-    static_assert(std::is_base_of_v<Event, T>);
-    return static_cast<const T*>(eventSptr.get());
-}
-
 // static class, wont get instatiated
 class FW
 {
@@ -131,20 +113,16 @@ class FW
         }
 };
 
-// event queue  -> std::deque with std::lock_guard
-// timer
-// pub-sub
-// hsm
-// her taskın kendine özel logger'ı olacak
-// hazır cli ?
-// examples -> make ile sadece ilgili bir example build et denecek
-    // bitset kullanılabilecek yerler var mı?
-    // custom objelerin operatörlerini overload edebileceğimiz durumlar var mı(bool, &&, >, < vs.)
-// command-line interface + trace (**TUI**)- nasıl olmalı, nasıl implemente edilecek
-// file logger ??
+// log view finalize
+// file logger
+// cli??
+// cmake with examples (add final, fmt, etc. as modules)
+
+// bitset kullanılabilecek yerler var mı?
+// custom objelerin operatörlerini overload edebileceğimiz durumlar var mı(bool, &&, >, < vs.)
 
 
 }   // namespace uOS
 
 
-#endif
+#endif  // uOS_H

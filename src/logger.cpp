@@ -60,19 +60,18 @@ void Logger::removeTaskLogger(const TaskId taskId) {
 }
 
 void Logger::logFw(const char* file, const char* function, int line, LogLevel level, std::string& formattedLogStr) {
-    // send string for formatting time and path
-    _logCommon(file, function, line, level, formattedLogStr);
+    //_logCommon(file, function, line, level, formattedLogStr);
 }
 
-void Logger::logTask(const char*, const char*, int, LogLevel, TaskId, std::string&) {
-
+void Logger::logTask(const char* file, const char* function, int line, LogLevel level, std::string& formattedLogStr, TaskId taskId) {
+    _logCommon(file, function, line, level, formattedLogStr, taskId);
 }
 
 bool Logger::isActive(void) {
     if(_tui == nullptr){
         return false;
     } else {
-        return false;
+        return true;
     }
 }
 

@@ -2,6 +2,7 @@
 #define uOS_DEFS_H
 
 #include <cstdint>
+#include <memory>
 
 static constexpr uint_fast16_t uOS_FW_MAX_TASK_COUNT = 256; 
 
@@ -24,8 +25,28 @@ constexpr SignalId EXT_SIGNAL_START = static_cast<SignalId>(32);
 
 // event
 struct Event {
-    SignalId signal;    // todo acil: optional senderId ekelenecek
+    SignalId signal;
+    std::optional<TaskId> source;
 };
+
+// event helpers
+template <class T = Event>
+T* new_e(std::optional<SignalId> signalId = std::nullopt)
+{
+    static_assert(std::is_base_of_v<Event, T>);
+    
+    T* newEventPtr = new T; 
+    if(signalId){
+        newEventPtr->signal = signalId.value();
+    }
+    return newEventPtr;
+}
+
+template <class T>
+const T* recast_e(std::shared_ptr<const Event>& eventSptr){
+    static_assert(std::is_base_of_v<Event, T>);
+    return static_cast<const T*>(eventSptr.get());
+}
 
 // log levels
 enum class LogLevel : uint_fast8_t {
@@ -42,4 +63,4 @@ enum class LogLevel : uint_fast8_t {
 }   // namespace uOS
 
 
-#endif
+#endif  // uOS_DEFS_H
