@@ -35,12 +35,9 @@ void Task::putEvent(std::shared_ptr<const Event>&& newEvent)
     std::lock_guard<std::mutex> lock(_queueMutex);
 
     // put event into te queue
-    //std::cout << "putEvent before - event copy count = " << newEvent.use_count() << std::endl;
     _eventQueue.emplace(std::move(newEvent));
-    //std::cout << "putEvent after event copy count = " << _eventQueue.back().use_count() << std::endl;
     
     if(_isUnlocked == false){
-        // std::cout << "notify..." << std::endl; 
         std::lock_guard<std::mutex> threadLock (_threadMutex);
         _isUnlocked = true;
         _taskCv.notify_one();
@@ -83,11 +80,6 @@ void Task::unsubscribe(SignalId signalId) { FW::unsubscribe(signalId, _id); }
 // yada postSelf olabilir
 void Task::putEvent(std::shared_ptr<const Event>& event) { putEvent(std::move(event)); }
 
-// void Task::log__(const char* file, const char* function, int line, std::string& logStr, LogLevel level) {
-//     logStr.insert(0, _logPrefix);
-//     FW::log__(file, function, line, logStr, level);
-// }
-
 //////////////////////////////////////////////////////
 //                                                  //
 //////////////////////////////////////////////////////
@@ -98,7 +90,6 @@ void Task::_taskLoop(void)
     std::unique_lock<std::mutex> threadLock(_threadMutex);
     _isUnlocked = true;
 
-    //std::cout << "task thread loop started for task: " << _name << std::endl;
     LOG(LogLevel::LOG_INFO, "task thread loop started !!!");
 
     while(_isRunning)
@@ -107,21 +98,17 @@ void Task::_taskLoop(void)
         std::shared_ptr<const Event> currentEvent = _getEvent();
         
         if(currentEvent != nullptr) {
-            //std::cout << "_taskLoop - event copy count = " << currentEvent.use_count() << std::endl;
             dispatch(currentEvent);
         } else {
-            //std::cout << "taskId: " << unsigned(_taskId) << " queue is empty, will sleep" << std::endl;
             LOG(LogLevel::LOG_TRACE, "queue is empty, will sleep");
             currentEvent.reset();
             _isUnlocked = false;
             _taskCv.wait(threadLock, [this] {return _isUnlocked;});
-            //std::cout << "taskId: " << _taskId << " awake" << std::endl;   
             LOG(LogLevel::LOG_TRACE, "awake");
         }
     }
     
     threadLock.unlock();
-    //std::cout << "task thread loop ended for taskId:" << unsigned(_taskId) << std::endl;
     LOG(LogLevel::LOG_INFO, "task thread loop ended !!!");
     return;
 }
@@ -139,7 +126,6 @@ std::shared_ptr<const Event> Task::_getEvent(void)
         //std::cout << "get event - event copy count = " << returnEvent.use_count() << std::endl;
         _eventQueue.pop();
         
-        //std::cout << "get event on taskId: " << unsigned(_taskId) << " --> signalId: " << returnEvent->signal << std::endl;
         LOG(LogLevel::LOG_TRACE, "get event -> signalId: {}", returnEvent->signal);
     }
 

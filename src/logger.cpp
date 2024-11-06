@@ -1,6 +1,4 @@
 
-#include <optional>
-
 #include "logger.h"
 #include "flogview.h"
 
@@ -38,7 +36,6 @@ void Logger::start(void) {
     if(_tui != nullptr){
         _loggerThread = std::thread{tuiThreadFunc};
     }
-    //_isActive = true;
 }
 
 void Logger::stop(void) {
@@ -46,7 +43,6 @@ void Logger::stop(void) {
     _loggerThread.join();
     delete _tui;
     _tui = nullptr;
-    //_isActive = false;
 }
 
 void Logger::addTaskLogger(const TaskId taskId, const std::string& taskName) {

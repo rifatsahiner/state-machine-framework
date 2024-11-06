@@ -3,11 +3,13 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 
 static constexpr uint_fast16_t uOS_FW_MAX_TASK_COUNT = 256; 
 
 
 namespace uOS {
+
 
 // taskId
 #if uOS_FW_MAX_TASK_COUNT > 256
@@ -16,11 +18,16 @@ using TaskId = uint_fast16_t;
 using TaskId = uint_fast8_t;
 #endif
 
-// signal id
+// signal
 using SignalId = uint_fast16_t;
 
+// published tick signals
+constexpr SignalId SIG_TICK_SEC = static_cast<SignalId>(4);
+constexpr SignalId SIG_TICK_MIN = static_cast<SignalId>(5);
+constexpr SignalId SIG_TICK_HOUR = static_cast<SignalId>(6);
+
 /// Offsets for user signals
-constexpr SignalId INT_SIGNAL_START = static_cast<SignalId>(4);
+constexpr SignalId INT_SIGNAL_START = static_cast<SignalId>(7);
 constexpr SignalId EXT_SIGNAL_START = static_cast<SignalId>(32);
 
 // event
@@ -29,7 +36,7 @@ struct Event {
     std::optional<TaskId> source;
 };
 
-// event helpers
+// event utility
 template <class T = Event>
 T* new_e(std::optional<SignalId> signalId = std::nullopt)
 {

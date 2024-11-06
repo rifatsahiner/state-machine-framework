@@ -6,8 +6,6 @@
 
 #include <utility>
 #include <functional>
-#include <optional>
-#include <chrono>
 
 #include <array>
 #include <vector>
@@ -23,6 +21,8 @@ using TimerId = uint_fast32_t;
 using TimerId = uint_fast16_t;
 #endif
 
+//class Task;
+
 
 namespace uOS {
 
@@ -34,13 +34,13 @@ class FW
         // fw op
         static void init(int = 0, char*[] = nullptr);
         static int32_t run(void);
-        static void stop(void);
+        static void kill(void);
 
         // task op
         static void startTask(TaskId);
         static void stopTask(TaskId);
         static bool resumeTask(TaskId);
-        static bool deleteTask(TaskId);
+        static bool deleteTask(TaskId);     // todo: task silinince subs'ları da silinmeli
 
         // event delivery 
         static void postEvent(TaskId, const Event*);

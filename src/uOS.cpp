@@ -1,6 +1,7 @@
 
 #include <iterator>
 #include <algorithm>
+#include <chrono>
 
 #include "uOS.h"
 
@@ -18,7 +19,7 @@ void FW::init(int argc, char* argv[]){
 
     // init logger if activated
     if(argc != 0){
-        Logger::init(argc, argv, &FW::stop);
+        Logger::init(argc, argv, &FW::kill);
     }
 
     // lock memory so we're never swapped out to disk   ????
@@ -26,6 +27,13 @@ void FW::init(int argc, char* argv[]){
 }
 
 int32_t FW::run() {
+    const Event TICK_SEC_EVENT {SIG_TICK_SEC, std::nullopt};
+    const Event TICK_MIN_EVENT {SIG_TICK_MIN, std::nullopt};
+    const Event TICK_HOUR_EVENT {SIG_TICK_HOUR, std::nullopt};
+    uint_fast8_t s = 0;
+    uint_fast8_t m = 0;
+    uint_fast8_t h = 0;
+
     // onStartup() aşağıdaki satırlar
     // struct termios tio;                        // modified terminal attributes
     // tcgetattr(0, &l_tsav);             // save the current terminal attributes
@@ -40,33 +48,51 @@ int32_t FW::run() {
     // pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam) == 0;  
 
     // start logger
-    //std::thread tuiThread(tuiThreadFunc);
     Logger::start();
     LOG(uOS::LogLevel::LOG_INFO, "[SYSTEM] Welcome to uOS application...");
-    //std::cout << "uOS run..." << std::endl;
 
-    while(_isRunning){
+    while(_isRunning) {
         // now süresini al
         auto now =  std::chrono::high_resolution_clock::now();
 
-        // if(++i == 100){
-        //     std::cout << "tick..." << std::endl;
-        //     i = 0;
-        // }
+        // check for second
+        if(++s == 50) {
+            auto secEvent = std::make_shared<const Event>(TICK_SEC_EVENT);
+            _publishEvent(secEvent);
+            s = 0;
+            
+            // check for minute
+            if(++m == 60) {
+                auto minEvent = std::make_shared<const Event>(TICK_MIN_EVENT);
+                _publishEvent(minEvent);
+                m = 0;
 
+                // check for hour
+                if(++h == 60) {
+                    auto hourEvent = std::make_shared<const Event>(TICK_HOUR_EVENT);
+                    _publishEvent(hourEvent);
+                    h = 0;
+                }
+            }
+        }
+
+        // handle timers
         _handleTick();
 
-        // sleep_until now + 10ms
-        std::this_thread::sleep_until(now + 10ms);
+        // sleep_until now + 20ms
+        std::this_thread::sleep_until(now + 20ms);
     }
 
     // terminate all task threads
     // todo: buraya tüm task threadleri kapatacak bir kod eklenecek
-    stopTask(_taskMap.begin()->first); 
-
-    LOG(LogLevel::LOG_INFO, "[SYSTEM] uOS Bye bye!");
+    //stopTask(_taskMap.begin()->first);
+    for(auto it = _taskMap.begin(); it != _taskMap.end();) {
+        stopTask(it->first);
+        it = _taskMap.erase(it);
+    }
 
     // terminate logger
+    LOG(LogLevel::LOG_INFO, "[SYSTEM] uOS Bye bye!");
     Logger::stop();
 
     // onCleanup aşağıdaki satırlar
@@ -78,7 +104,7 @@ int32_t FW::run() {
     return 0;
 }
 
-void FW::stop(void){
+void FW::kill(void){
     _isRunning = false;
 }
 
@@ -112,14 +138,14 @@ TimerId FW::postEventIn(uint_fast16_t intervalMs, TaskId taskId, const Event* ev
     assert(_taskMap.find(taskId) != _taskMap.cend());
     
     // call common function for new timer creation
-    return _setupTimedEvent(false, false, intervalMs / 10, event, taskId);
+    return _setupTimedEvent(false, false, intervalMs / 20, event, taskId);
 }
 
 TimerId FW::postEventEvery(uint_fast16_t intervalMs, TaskId taskId, const Event* event)
 {
     assert(_taskMap.find(taskId) != _taskMap.cend());
 
-    return _setupTimedEvent(false, true, intervalMs / 10, event, taskId);
+    return _setupTimedEvent(false, true, intervalMs / 20, event, taskId);
 }
 
 void FW::publishEvent(const Event* event)
@@ -139,12 +165,12 @@ void FW::publishEvent(const Event* event)
 
 TimerId FW::publishEventIn(uint_fast16_t intervalMs, const Event* event)
 {
-    return _setupTimedEvent(true, false, intervalMs / 10, event);
+    return _setupTimedEvent(true, false, intervalMs / 20, event);
 }
 
 TimerId FW::publishEventEvery(uint_fast16_t intervalMs, const Event* event)
 {
-    return _setupTimedEvent(true, true, intervalMs / 10, event);
+    return _setupTimedEvent(true, true, intervalMs / 20, event);
 }
 
 void FW::cancelTimedEvent(TimerId timerId){
@@ -240,11 +266,12 @@ void FW::_publishEvent(std::shared_ptr<const Event>& event)
 {
     std::lock_guard<std::mutex> lock(_subsMutex);
 
-    // get signal's subs list, assert if signal id does not have subs list 
+    // get signal's subs list, return if signal id does not have subs list 
     auto subListIter = _subsMap.find(event->signal);
-    //assert(subListIter != _subsMap.cend()); -> publish eden bunu bilmeyebilir
 
-    _publishEventCommon(event, subListIter->second);
+    if(subListIter != _subsMap.cend()) {
+        _publishEventCommon(event, subListIter->second);
+    }
 }
 
 void FW::_publishEventCommon(std::shared_ptr<const Event>& event, std::vector<TaskId>& subsList)
@@ -353,8 +380,6 @@ void FW::_handleTick(void)  // todo: inline yap
         // get head timer and decrement downcounter
         auto head = _timerQueue.begin();
         head->second--;
-
-        // std::cout << "head->second: " << head->second << std::endl;
 
         // check if head expired
         while(head->second == 0)

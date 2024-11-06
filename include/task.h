@@ -6,9 +6,9 @@
 #include <condition_variable>
 #include <queue>
 
-#include "uOS_defs.h"
-#include "state_machine.h"
 #include "logger.h"
+//#include "uOS_defs.h"
+#include "state_machine.h"
 
 
 namespace uOS {

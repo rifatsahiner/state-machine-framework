@@ -67,5 +67,6 @@
             "binaryPath": "/home/ulak/repos/state-machine-framework/bin/main",
             "binaryArgs": []
         }
-    ]
+    ],
+    "makefile.configureOnOpen": true
 }
